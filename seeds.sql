@@ -9,15 +9,11 @@ create table products (
     department_name varchar(30) not null,
     price decimal(20,2) not null,
     stock_quantity integer(10) not null,
+    product_sales decimal(20,2) default 0,
+    product_costs decimal (20,2) not null,
     primary key(item_id)
     );
-
-
-insert into products (product_name,department_name,price,stock_quantity) values ("Toilet Paper","Home Goods",9.99,100);
 select * from products;
-insert into products (product_name,department_name,price,stock_quantity) values ("Chloroquine","Cure All",999.99,1000);
-insert into products (product_name,department_name,price,stock_quantity) values ("Don Lewis's Skull","Souvenirs",10000,1);
-
 create table users (
 	user_id integer(10) auto_increment,
     user_name varchar(10) not null,
@@ -28,11 +24,21 @@ create table users (
 select * from users;
 create table transactions (
 	transaction_id integer auto_increment,
+    user_id integer not null,
+    user_name varchar(10) not null,
     transaction_type varchar(10) not null,
     amount decimal(10,2),
+    item_id integer,
     items varchar(30),
     account_balance decimal(10,2) not null,
-    transaction_date datetime,
+    transaction_date timestamp,
     primary key (transaction_id)
     );
-    
+select * from transactions;
+create table departments (
+	department_id integer auto_increment,
+    department_name varchar(30),
+    overhead decimal(10,2),
+    primary key (department_id)
+    );
+select * from departments;

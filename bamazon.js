@@ -1,8 +1,11 @@
 var mysql = require("mysql");
 var inquirer = require("inquirer");
 var moment = require('moment');
+var Table = require('cli-table');
 var user = "";
+var userID = "";
 var userBalance = parseFloat(0);
+var productList = [];
 var connection = mysql.createConnection({
     host: "localhost",
 
@@ -19,9 +22,8 @@ var connection = mysql.createConnection({
 
 connection.connect(function (err) {
     if (err) throw err;
-
     initializeStore()
-
+    getProducts()
     function initializeStore() {
         console.log("Welcome to the store:")
         inquirer.prompt([
@@ -85,7 +87,7 @@ connection.connect(function (err) {
                     
                     
                     
-                    checkPassword(res[0].user_password,res[0].user_name,res[0].account_balance)                 
+                    checkPassword(res[0].user_password,res[0].user_name,res[0].user_id,res[0].account_balance)                 
                 } else {
                     console.log("User does not exist")
                     initializeStore();
@@ -93,7 +95,7 @@ connection.connect(function (err) {
                 }
             })
     }
-    function checkPassword(password,username,balance) {
+    function checkPassword(password,username,userid,balance) {
         inquirer.prompt([
             {
                 type: "password",
@@ -105,18 +107,19 @@ connection.connect(function (err) {
                
                 user = username;
                 userBalance = balance;
-                printUser()
-                chooseAction();
+                userID = userid;
+                printUser();
+                chooseAction()
             } else {
-                console.warning("The password you have entered is incorrect");
+                console.log("The password you have entered is incorrect");
                 initializeStore();
 
             }
         })
     }
     function printUser() {
-        console.log("Logged in as:"+ user)
-        console.log("Balance: $" + userBalance)
+        console.log("\nLogged in as: "+ user)
+        console.log("Balance: $" + userBalance+"\n")
     }
 
 
@@ -129,7 +132,7 @@ connection.connect(function (err) {
             },
             function (err, res) {
                 if (err) throw err;
-                console.log("Welcome to the store " + username)
+                console.log("Welcome to the store  " + username)
                 initializeStore();
             })
     }
@@ -162,10 +165,14 @@ connection.connect(function (err) {
     function printProducts() {
         connection.query("SELECT * from products", function (err, res) {
             if (err) throw err;
+            var table = new Table({
+                head: ['Item ID', 'Product',"Department","Price","Stock Quantity"]
+              , colWidths: [10,15,15,10,15]
+            });
             for (var i = 0; i < res.length; i++) {
-                console.log(res[i].item_id + " | " + res[i].product_name + " | " + res[i].department_name + " | " + res[i].price + "|" + res[i].stock_quantity);
+                table.push([res[i].item_id,res[i].product_name, res[i].department_name,res[i].price,res[i].stock_quantity]);
             }
-
+            console.log(table.toString());
         })
 
     }
@@ -175,7 +182,8 @@ connection.connect(function (err) {
             {
                 name: "product",
                 message: "What product would you like to buy?",
-                type: "input"
+                type: "list",
+                choices: productList
             },
             {
                 name: "quantity",
@@ -190,16 +198,17 @@ connection.connect(function (err) {
 
     }
 
-    function checkStock(itemID, quantity) {
-        var sql = "select * from products where item_id=?"
+    function checkStock(product, quantity) {
+        var sql = "select * from products where product_name=?"
         connection.query(sql,
-            [itemID],
+            [product],
             function (err, res) {
                 if (err) throw err;
                 if (!( typeof res[0] === 'undefined')) {
                     stockQuantity = res[0].stock_quantity;
                     price = parseFloat(res[0].price * quantity);
-                    product = res[0].product_name;
+                    itemID = res[0].item_id;
+                    sales = res[0].product_sales;
                     if (quantity > stockQuantity) {
                         console.log("There are not enough in stock")
                         chooseAction();
@@ -208,7 +217,7 @@ connection.connect(function (err) {
                         chooseAction();
                     } else {
                         userBalance = userBalance - price;
-                        allowSale(itemID, quantity, stockQuantity, price, product);
+                        allowSale(itemID, quantity, stockQuantity, price, product,sales);
                     }
                 } else {
                     console.log("Item does not exist")
@@ -217,15 +226,15 @@ connection.connect(function (err) {
             })
     }
 
-    function allowSale(itemID, quantity, stockQuantity, price, product) {
+    function allowSale(itemID, quantity, stockQuantity, price, product,sales) {
         connection.query("update products set ? where ?",
-            [{ stock_quantity: stockQuantity - quantity }, { item_id: itemID }],
+            [{ stock_quantity: stockQuantity - quantity,product_sales:sales+price }, { product_name: product }],
             function (err, res) {
                 if (err) throw err;
-                console.log(user + "bought " + quantity + "" + product +" for $" + price)
+                console.log(user + "bought " + quantity + " x " + product +" for $" + price)
                 printProducts();
                 changeBalance();
-                recordTransaction("purchase",-price,product)
+                recordTransaction("purchase",-price,product,itemID)
                 setTimeout(chooseAction, 500)
             }
         )
@@ -254,19 +263,21 @@ connection.connect(function (err) {
             }
         ]).then(function(answer){
             userBalance = userBalance + parseInt(answer.funds);
-            console.log("$"+answer.funds + " was added to " + user +"'s account")
+            console.log("\n$"+answer.funds + " was added to " + user +"'s account\n")
             changeBalance();
             recordTransaction("deposit",answer.funds,"none")
             setTimeout(chooseAction,500)
         })
     }
-    function recordTransaction(type,amount,items){
+    function recordTransaction(type,amount,items,itemID){
         connection.query("insert into transactions set ?",
         {
             user_name: user,
+            user_id: userID,
             transaction_type: type,
             amount: amount,
             items: items,
+            item_id: itemID,
             account_balance: userBalance,
             transaction_date: moment().format("YYYY-MM-DD HH:mm:ss")
 
@@ -277,13 +288,26 @@ connection.connect(function (err) {
         [user],
         function (err, res) {
         if (err) throw err;
-        console.log(user + "'s transaction history")
+        console.log(user + "'s transaction history\n")
+        var table = new Table({
+            head: ['Type', 'Amount',"Item","Account Balance","Date/Time"]
+          , colWidths: [10,15,15,20,20]
+        });
         for (var i = 0; i < res.length; i++) {
-            console.log(res[i].transaction_type + " | " + res[i].amount + " | " + res[i].items + " | " + res[i].account_balance + "|" + moment(res[i].transaction_date).format("YYYY-MM-DD HH:mm:ss"));
+            table.push([res[i].transaction_type, res[i].amount,res[i].items,res[i].account_balance,moment(res[i].transaction_date).format("YYYY-MM-DD HH:mm:ss")]);
         }
+        console.log(table.toString());
         chooseAction()
         })
 
+    }
+    function getProducts () {
+        connection.query("select * from products",function(err,res){
+            if (err) throw err;
+            for (var i=0; i<res.length; i++) {
+                productList.push(res[i].product_name)
+            }
+        })
     }
 })
 
