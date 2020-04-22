@@ -2,11 +2,11 @@
 
 ### Overview
 
-Store Front is a command line interface node.js and mySQL application that allows "users" to purchase products, view their transactions and add funds to their account. It then allows "managers" to add new products, add to inventories and search transactions by item or user.  Finally it  allows "supervisors" to view department costs, sales and profits and create new departments.  The data for the application is stored in tables in a mySQL database.  
+Store Front is a command line interface node.js and mySQL application that allows "users" to purchase products, view their transactions and add funds to their account. It then allows "managers" to add new products, add to inventories and search all transactions or by item or user.  Finally it  allows "supervisors" to view department costs, sales and profits and create new departments.  The data for the application is stored in 4 tables for products, user, transactions and departments. Data tables are created using the CLI table NPM and mySQL queries.   
 
 ## User Level
 ![User Log In](Images/userloginbuy.jpg)
-<i>"User Log In/Product Table"</i>
+<i><b>"User Log In/Product Table"</b></i>
 
 
 The user is first prompted to "Log In" or "Sign In" for a new account.  If the user does not have an account they can create a user name, a password and then add money to their account.  The user may then "Log In" with their account, where they may choose to "Buy", "Add Funds" or "View Transactions".  
@@ -21,7 +21,7 @@ If the user needs more money their account they may "Add Funds" which allows the
 
 If the user would like to "View Transactions", a list of their transactions will be listed in a table with transaction type, amount, item purchased, current balance and datetime of the transaction.
 
-### Manager
+## Manager
 
 ![Manager Home](Images/managerhomepage.jpg)
 <i><b>"Manager Home"</b></i> 
@@ -43,7 +43,7 @@ If the manager wants to "Add to inventory" they must input the "Item Id" number,
 
 The manager may "Delete product" by choosing the "Item Id" of the product they would like to delete.
 
-### Supervisor Level 
+## Supervisor Level 
 
 When the "Supervisor" logs in, they are given the choice to "View Departments" or "Add a New Department".
 
@@ -52,6 +52,7 @@ When the "Supervisor" logs in, they are given the choice to "View Departments" o
 
 The supervisor may "View Departments" and all the departments with their respective total sales, total costs and total profits will be listed.  Total sales are the amount of the item purchased from the user, total costs are the amount paid by the manager for the product per unit times the quantity added and total profit is sales minus the costs.  
 
-The supervisor may also "Add a New Department".  This allows the manager to add new products and inventory to the department.  The department will not be listed under "View Departments" unit a product has been added to the department.
+The supervisor may also "Add a New Department".  This allows the manager to add new products and inventory to the department.  The department will not be listed under "View Departments" until a product has been added to the department.
 
-
+![Demo](images/storefrontdemo.gif)
+### [Click for Demo](https://drive.google.com/file/d/1IDjPqhDyDOEMrwowFbuQIc_KTHRuYxWF/view)
