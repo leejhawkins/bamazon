@@ -54,5 +54,5 @@ The supervisor may "View Departments" and all the departments with their respect
 
 The supervisor may also "Add a New Department".  This allows the manager to add new products and inventory to the department.  The department will not be listed under "View Departments" until a product has been added to the department.
 
-![Demo](images/storefrontdemo.gif)
+![Demo](Images/storefrontdemo.gif)
 ### [Click for Demo](https://drive.google.com/file/d/1IDjPqhDyDOEMrwowFbuQIc_KTHRuYxWF/view)
